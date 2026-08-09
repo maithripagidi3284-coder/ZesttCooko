@@ -70,7 +70,7 @@ router.get("/chef", requireAuth, async (req: AuthRequest, res) => {
         weeklyEarnings,
         monthlyEarnings,
         completedOrders: completed.length,
-        pendingOrders: bookings.filter((b) => b.status === "PENDING").length,
+        pendingOrders: bookings.filter((b) => b.status === "SEARCHING").length,
         complaintsCount: complaints.length,
       },
       dailyEarnings,

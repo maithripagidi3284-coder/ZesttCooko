@@ -91,7 +91,7 @@ router.post("/create", requireAuth, async (req: AuthRequest, res) => {
 router.get("/:id", requireAuth, async (req: AuthRequest, res) => {
   try {
     const booking = await prisma.booking.findUnique({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       include: { offers: { orderBy: { offeredAt: "desc" } } },
     });
     if (!booking) return res.status(404).json({ error: "Booking not found" });
