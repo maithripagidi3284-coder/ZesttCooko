@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  CHEF
+}
+
+enum VerificationStatus {
+  NOT_SUBMITTED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AvailabilityMode {
+  PART_TIME
+  FULL_TIME
+}
+
+enum BookingStatus {
+  SEARCHING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  FAILED_NO_CHEFS
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum BookingType {
+  INSTANT
+  SCHEDULED
+}
+
+enum EventType {
+  KITTY_PARTY
+  BIRTHDAY
+  PRIVATE_EVENT
+  FAMILY_GATHERING
+  OFFICE_PARTY
+  OTHER
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  whatsapp           String              @unique
+  passwordHash       String?
+  name               String?
+  profilePicUrl      String?
+  role               Role
+  isVerified         Boolean             @default(false)
+  idProofUrl         String?
+  verificationStatus VerificationStatus  @default(NOT_SUBMITTED)
+  chefProfile        ChefProfile?
+  createdAt          DateTime            @default(now())
+}
+
+model ChefProfile {
+  id                 String            @id @default(cuid())
+  userId             String            @unique
+  user               User              @relation(fields: [userId], references: [id])
+  cuisineSpecialties String[]
+  signatureDishes    String[]
+  hourlyRate         Float
+  age                Int?
+  availabilityMode   AvailabilityMode  @default(PART_TIME)
+  isOnline           Boolean           @default(false)
+  latitude           Float?
+  longitude          Float?
+  travelRadiusKm     Int               @default(5)
+  ratingAvg          Float             @default(0)
+  ratingCount        Int               @default(0)
+  createdAt          DateTime          @default(now())
+}
+
+model VerificationCode {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Booking {
+  id                String        @id @default(cuid())
+  userId            String
+  requestedChefId   String
+  chefId            String?
+  assistantChefId   String?
+  status            BookingStatus @default(SEARCHING)
+  bookingType       BookingType   @default(SCHEDULED)
+  eventType         EventType     @default(OTHER)
+  scheduledAt       DateTime
+  hours             Int
+  headcount         Int
+  selectedDishes    String[]
+  customRequest     String?
+  totalAmount       Float
+  platformFee       Float
+  chefPayout        Float
+  assistantPayout   Float?
+  hasComplaint      Boolean       @default(false)
+  complaintText     String?
+  rating            Int?
+  reviewText        String?
+  createdAt         DateTime      @default(now())
+  completedAt       DateTime?
+  offers            BookingOffer[]
+}
+
+model BookingOffer {
+  id          String      @id @default(cuid())
+  bookingId   String
+  booking     Booking     @relation(fields: [bookingId], references: [id])
+  chefId      String
+  status      OfferStatus @default(PENDING)
+  offeredAt   DateTime    @default(now())
+  expiresAt   DateTime
+  respondedAt DateTime?
+}
