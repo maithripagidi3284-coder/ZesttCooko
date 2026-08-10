@@ -31,9 +31,24 @@ interface DashboardData {
   complaints: Array<{ id: string; complaintText: string | null }>;
 }
 
+interface PendingOffer {
+  id: string;
+  expiresAt: string;
+  booking: {
+    id: string;
+    eventType: string;
+    scheduledAt: string;
+    hours: number;
+    headcount: number;
+    totalAmount: number;
+    chefPayout: number;
+  };
+}
+
 export default function ChefDashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
+  const [offers, setOffers] = useState<PendingOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
 
@@ -48,6 +63,11 @@ export default function ChefDashboardPage() {
       return;
     }
     loadDashboard();
+    loadOffers();
+
+    // Poll for new offers every 5 seconds
+    const interval = setInterval(loadOffers, 5000);
+    return () => clearInterval(interval);
   }, [router]);
 
   async function loadDashboard() {
@@ -58,6 +78,25 @@ export default function ChefDashboardPage() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadOffers() {
+    try {
+      const result = await apiGet("/api/offers/pending", getToken()!);
+      setOffers(result.offers);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function respondToOffer(offerId: string, accept: boolean) {
+    try {
+      await apiPost(`/api/offers/${offerId}/respond`, { accept }, getToken()!);
+      loadOffers();
+      loadDashboard();
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -124,6 +163,42 @@ export default function ChefDashboardPage() {
         <p className="font-body text-ink/60 mt-1">
           Track your earnings, bookings, and ratings.
         </p>
+
+        {offers.length > 0 && (
+          <div className="space-y-4 mt-8">
+            {offers.map((offer) => (
+              <div
+                key={offer.id}
+                className="bg-marigold/10 border border-marigold/30 rounded-2xl p-6"
+              >
+                <p className="font-display text-lg font-semibold text-ink">
+                  New booking request
+                </p>
+                <p className="font-body text-sm text-ink/60 mt-1">
+                  {new Date(offer.booking.scheduledAt).toLocaleString("en-IN")} ·{" "}
+                  {offer.booking.hours}h · {offer.booking.headcount} guests
+                </p>
+                <p className="font-mono text-sm text-ink/70 mt-2">
+                  You earn ₹{offer.booking.chefPayout}
+                </p>
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={() => respondToOffer(offer.id, true)}
+                    className="px-4 py-2 rounded-full bg-bay text-white text-sm font-body font-medium"
+                  >
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => respondToOffer(offer.id, false)}
+                    className="px-4 py-2 rounded-full bg-ink/10 text-ink text-sm font-body font-medium"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
           <StatCard
