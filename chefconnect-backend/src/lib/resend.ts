@@ -4,7 +4,7 @@ const resend = new Resend(process.env.RESEND_KEY);
 
 export async function sendVerificationEmail(email: string, code: string) {
   await resend.emails.send({
-    from: 'GenZeChef <noreply@zestcooko.work.gd>',
+    from: 'GenZeChef <noreply@chefezy.com>',
     to: email,
     subject: "Your ChefConnect verification code",
     html: `

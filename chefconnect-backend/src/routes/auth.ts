@@ -32,7 +32,9 @@ router.post("/signup/send-code", async (req, res) => {
     await prisma.verificationCode.create({
       data: { email, code, expiresAt },
     });
-console.log(`\n🔑 Verification code for ${email}: ${code}\n`);
+if (process.env.NODE_ENV !== "production") {
+  console.log(`\n🔑 Verification code for ${email}: ${code}\n`);
+}
 
     try {
       await sendVerificationEmail(email, code);

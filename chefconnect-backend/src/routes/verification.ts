@@ -17,24 +17,26 @@ router.post(
         return res.status(400).json({ error: "ID proof image is required" });
       }
 
-      const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: "chefconnect/id-proofs", type: "private" },
-          (error, result) => {
-            if (error || !result) return reject(error);
-            resolve(result);
-          }
-        );
-        stream.end(req.file!.buffer);
-      });
+      const uploadResult = await new Promise<{ public_id: string }>((resolve, reject) => {
+  const stream = cloudinary.uploader.upload_stream(
+    { folder: "chefconnect/id-proofs", type: "private" },
+    (error, result) => {
+      if (error || !result) return reject(error);
+      resolve(result);
+    }
+  );
+  stream.end(req.file!.buffer);
+});
 
-      await prisma.user.update({
-        where: { id: req.userId },
-        data: {
-          idProofUrl: uploadResult.secure_url,
-          verificationStatus: "PENDING",
-        },
-      });
+await prisma.user.update({
+  where: { id: req.userId },
+  data: {
+    idProofUrl: uploadResult.public_id,  // store the reference, not a working URL
+    verificationStatus: "PENDING",
+  },
+});
+
+      
 
       res.json({ message: "ID submitted for review", status: "PENDING" });
     } catch (err) {

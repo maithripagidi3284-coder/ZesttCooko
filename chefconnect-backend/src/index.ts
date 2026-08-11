@@ -8,6 +8,7 @@ import verificationRoutes from "./routes/verification";
 import dashboardRoutes from "./routes/dashboard";
 import bookingsRoutes from "./routes/bookings";
 import offersRoutes from "./routes/offers";
+import statsRoutes from "./routes/stats.routes";
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/verification", verificationRoutes);
 app.use("/api/bookings", bookingsRoutes);
 app.use("/api/offers", offersRoutes);
+app.use("/api/stats", statsRoutes);
 app.get("/", (req, res) => {
   res.json({ status: "ChefConnect API is running" });
 });
